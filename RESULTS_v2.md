@@ -116,6 +116,116 @@ K_optimal = **75** — F1 cao nhất tại K=75; K=78 (X_full) thấp hơn, ngh�
 
 ---
 
+## Feature lists theo ablation strategy
+
+**Bold** = feature thuộc X_old (Martins original). Thường = CK feature.
+Score = combined rank tổng hợp từ RF importance, XGB gain, permutation importance, MI, SHAP (normalize về [0,1], lấy mean).
+
+### Additive — X_selected (58 features = tất cả X_old + top-20 CK)
+
+| # | Feature | Nhóm | Score |
+|---:|---|---|---:|
+| 1 | **codeChurnMax** | churn_history | 0.851 |
+| 2 | **codeChurnTotal** | churn_history | 0.822 |
+| 3 | **removedLinesMax** | churn_history | 0.819 |
+| 4 | assignmentsQty | ck_expressions | 0.817 |
+| 5 | variablesQty | ck_expressions | 0.773 |
+| 6 | **codeChurnAvg** | churn_history | 0.734 |
+| 7 | **NAs** | size_complexity | 0.718 |
+| 8 | stringLiteralsQty | ck_expressions | 0.708 |
+| 9 | publicMethodsQty | ck_methods | 0.700 |
+| 10 | **removedLinesAvg** | churn_history | 0.692 |
+| 11 | **removedLinesCount** | churn_history | 0.690 |
+| 12 | **AsD** | size_complexity | 0.683 |
+| 13 | lcom* | ck_cohesion | 0.677 |
+| 14 | **Magic Number Test** | test_smell | 0.669 |
+| 15 | **RFC** | size_complexity | 0.656 |
+| 16 | cbo | ck_coupling | 0.630 |
+| 17 | **Lazy Test** | test_smell | 0.629 |
+| 18 | **addLinesCount** | churn_history | 0.627 |
+| 19 | **LOC** | size_complexity | 0.625 |
+| 20 | totalFieldsQty | ck_fields | 0.601 |
+| 21 | uniqueWordsQty | ck_misc | 0.599 |
+| 22 | visibleMethodsQty | ck_methods | 0.591 |
+| 23 | **Unknown Test** | test_smell | 0.581 |
+| 24 | numbersQty | ck_expressions | 0.581 |
+| 25 | nosi | ck_misc | 0.577 |
+| 26 | cboModified | ck_coupling | 0.574 |
+| 27 | loopQty | ck_expressions | 0.573 |
+| 28 | **Exception Catching Throwing** | test_smell | 0.547 |
+| 29 | **NOM** | size_complexity | 0.538 |
+| 30 | **Assertion Roulette** | test_smell | 0.536 |
+| 31 | **WMC** | size_complexity | 0.534 |
+| 32 | lcom | ck_cohesion | 0.534 |
+| 33 | **commits** | churn_history | 0.526 |
+| 34 | **Sleepy Test** | test_smell | 0.521 |
+| 35 | **General Fixture** | test_smell | 0.516 |
+| 36 | tryCatchQty | ck_expressions | 0.514 |
+| 37 | defaultFieldsQty | ck_fields | 0.510 |
+| 38 | staticFieldsQty | ck_fields | 0.508 |
+| 39 | mathOperationsQty | ck_expressions | 0.503 |
+| 40 | **NumberOfMethods** | test_smell | 0.503 |
+| 41 | totalMethodsQty | ck_methods | 0.500 |
+| 42 | comparisonsQty | ck_expressions | 0.497 |
+| 43 | **Sensitive Equality** | test_smell | 0.495 |
+| 44 | **Duplicate Assert** | test_smell | 0.492 |
+| 45 | **Eager Test** | test_smell | 0.491 |
+| 46 | **addLinesAvg** | churn_history | 0.468 |
+| 47 | **Conditional Test Logic** | test_smell | 0.456 |
+| 48 | **addLinesMax** | churn_history | 0.442 |
+| 49 | **IgnoredTest** | test_smell | 0.442 |
+| 50 | **Resource Optimism** | test_smell | 0.409 |
+| 51 | **contributorsExperience** | churn_history | 0.408 |
+| 52 | **Mystery Guest** | test_smell | 0.370 |
+| 53 | **EmptyTest** | test_smell | 0.352 |
+| 54 | **minorContributors** | churn_history | 0.339 |
+| 55 | **Contributors** | churn_history | 0.314 |
+| 56 | **Print Statement** | test_smell | 0.310 |
+| 57 | **Redundant Assertion** | test_smell | 0.308 |
+| 58 | **Constructor Initialization** | test_smell | 0.184 |
+
+### Global — X_sel_global (75 features = top-75 từ X_full)
+
+Top-75 theo global ranking — khác Additive ở chỗ không buộc giữ toàn bộ X_old: loại 1 X_old feature (`Constructor Initialization`, score thấp nhất) và 2 CK features (`noc`, `defaultMethodsQty`).
+Rank 1–47 giống hệt bảng Additive. Từ rank 48 trở đi:
+
+| # | Feature | Nhóm | Score |
+|---:|---|---|---:|
+| 48 | modifiers | ck_misc | 0.443 |
+| 49 | **addLinesMax** | churn_history | 0.442 |
+| 50 | **IgnoredTest** | test_smell | 0.442 |
+| 51 | staticMethodsQty | ck_methods | 0.425 |
+| 52 | finalFieldsQty | ck_fields | 0.423 |
+| 53 | protectedFieldsQty | ck_fields | 0.419 |
+| 54 | dit | ck_inheritance | 0.412 |
+| 55 | **Resource Optimism** | test_smell | 0.409 |
+| 56 | **contributorsExperience** | churn_history | 0.408 |
+| 57 | maxNestedBlocksQty | ck_expressions | 0.406 |
+| 58 | protectedMethodsQty | ck_methods | 0.391 |
+| 59 | **Mystery Guest** | test_smell | 0.370 |
+| 60 | **EmptyTest** | test_smell | 0.352 |
+| 61 | logStatementsQty | ck_misc | 0.352 |
+| 62 | privateMethodsQty | ck_methods | 0.351 |
+| 63 | privateFieldsQty | ck_fields | 0.340 |
+| 64 | **minorContributors** | churn_history | 0.339 |
+| 65 | lambdasQty | ck_misc | 0.319 |
+| 66 | **Contributors** | churn_history | 0.314 |
+| 67 | fanin | ck_coupling | 0.314 |
+| 68 | returnQty | ck_expressions | 0.312 |
+| 69 | **Print Statement** | test_smell | 0.310 |
+| 70 | **Redundant Assertion** | test_smell | 0.308 |
+| 71 | publicFieldsQty | ck_fields | 0.296 |
+| 72 | innerClassesQty | ck_misc | 0.283 |
+| 73 | parenthesizedExpsQty | ck_expressions | 0.281 |
+| 74 | anonymousClassesQty | ck_misc | 0.275 |
+| 75 | finalMethodsQty | ck_methods | 0.243 |
+
+**3 features bị loại** (rank 76–78): `Constructor Initialization` (X_old, 0.184), `noc` (CK), `defaultMethodsQty` (CK).
+
+**Điểm khác biệt chính giữa hai chiến lược:** Ở rank 48, Global xen `modifiers` (CK, 0.443) trước `addLinesMax` và `IgnoredTest` (X_old, 0.442) — Additive không thể làm vậy vì buộc phải giữ toàn bộ X_old. Ngoài ra Global đưa thêm 18 CK features tầm trung (rank 51–75) mà Additive bỏ qua, đổi lại loại `Constructor Initialization` (X_old yếu nhất).
+
+---
+
 ## Top-10 CK features (combined ranking)
 
 | # | Feature | Nhóm |
