@@ -226,6 +226,85 @@ Rank 1–47 giống hệt bảng Additive. Từ rank 48 trở đi:
 
 ---
 
+## Dimensionality Reduction — PCA trên X_full (NB-05)
+
+**Thiết kế:** StandardScaler → PCA(k) → classifier trong pipeline (fit trên train fold, không data leakage).  
+**Probe:** PCA(95% variance) trên toàn bộ X_full → **k_95 = 43** / 78 components.  
+**So sánh tại:** k_best = 75 (tối ưu sweep) và k_95 = 43.
+
+### Phase 1 — Component sweep (RF × Protocol B)
+
+| k | F1 | AUC | Ghi chú |
+|---:|---|---|---|
+| 5 | 0.666 ± 0.013 | 0.653 ± 0.021 | |
+| 10 | 0.683 ± 0.011 | 0.673 ± 0.018 | |
+| 15 | 0.691 ± 0.012 | 0.682 ± 0.019 | |
+| 20 | 0.698 ± 0.020 | 0.684 ± 0.019 | |
+| 25 | 0.695 ± 0.015 | 0.686 ± 0.017 | |
+| 30 | 0.702 ± 0.016 | 0.686 ± 0.017 | |
+| 35 | 0.704 ± 0.016 | 0.691 ± 0.020 | |
+| 40 | 0.701 ± 0.017 | 0.687 ± 0.017 | |
+| **43** | 0.701 ± 0.014 | 0.689 ± 0.013 | ← k_95 (95% variance) |
+| 45 | 0.705 ± 0.014 | 0.687 ± 0.014 | |
+| 50 | 0.698 ± 0.014 | 0.690 ± 0.017 | |
+| 55 | 0.702 ± 0.013 | 0.693 ± 0.017 | |
+| 60 | 0.708 ± 0.019 | 0.695 ± 0.013 | |
+| 65 | 0.705 ± 0.014 | 0.692 ± 0.013 | |
+| 70 | 0.703 ± 0.016 | 0.693 ± 0.015 | |
+| **75** | **0.710 ± 0.011** | **0.696 ± 0.010** | ← k_best |
+| 78 | 0.707 ± 0.015 | 0.694 ± 0.010 | = X_full rotated |
+
+**Baseline RF + X_full (no PCA): F1 = 0.730, AUC = 0.751**
+
+Curve plateau từ k=30, đỉnh tại k=75. PCA **không vượt qua** baseline tại bất kỳ điểm nào.
+
+### Phase 2 — Full comparison tại k_best=75 và k_95=43
+
+#### F1 mean — Protocol A
+
+| Classifier | X_full (baseline) | X_pca_75 | X_pca_43 |
+|---|---:|---:|---:|
+| RF | **0.732** | 0.710 (−0.022) | 0.703 (−0.029) |
+| XGB | **0.716** | 0.686 (−0.030) | 0.686 (−0.030) |
+| SVM | 0.695 | 0.695 (±0.000) | 0.695 (±0.000) |
+| LR | 0.672 | 0.672 (±0.000) | 0.677 (+0.005) |
+| DT | 0.670 | 0.614 (−0.056) | 0.628 (−0.042) |
+| Dummy | 0.562 | 0.562 | 0.562 |
+
+#### F1 mean — Protocol B
+
+| Classifier | X_full (baseline) | X_pca_75 | X_pca_43 |
+|---|---:|---:|---:|
+| RF | **0.730** | 0.710 (−0.020) | 0.701 (−0.029) |
+| XGB | 0.715 | 0.674 (−0.041) | 0.676 (−0.039) |
+| SVM | 0.689 | 0.689 (±0.000) | 0.693 (+0.004) |
+| LR | 0.672 | 0.671 (−0.001) | 0.682 (+0.010) |
+| DT | 0.657 | 0.617 (−0.040) | 0.628 (−0.029) |
+| Dummy | 0.554 | 0.554 | 0.554 |
+
+#### F1 mean — Protocol C (cross-project)
+
+| Classifier | X_full (baseline) | X_pca_75 | X_pca_43 |
+|---|---:|---:|---:|
+| SVM | **0.657** | 0.657 (±0.000) | 0.657 (+0.000) |
+| LR | 0.619 | 0.619 (±0.000) | **0.645 (+0.026)** |
+| RF | 0.618 | 0.613 (−0.005) | 0.628 (+0.010) |
+| XGB | 0.591 | 0.597 (+0.006) | 0.582 (−0.009) |
+| DT | 0.565 | 0.548 (−0.017) | 0.547 (−0.018) |
+| Dummy | 0.558 | 0.558 | 0.558 |
+
+### Quan sát PCA
+
+**1. PCA không cải thiện RF và XGBoost**: tree-based models bị tổn thất rõ rệt (RF: −0.020 đến −0.030 F1; XGB: −0.030 đến −0.041 F1). Lý do: RF/XGB khai thác trực tiếp feature gốc theo từng split; PCA phá vỡ cấu trúc đơn biến này mà không bổ sung thông tin mới.
+
+**2. PCA trung tính với LR và SVM**: hai linear models đã có StandardScaler nên PCA chỉ thêm phép xoay trục; gain/loss đều dưới ±0.010 F1 (không đáng kể). Ngoại lệ nhỏ: LR + k_95=43 trên Protocol C tăng +0.026 F1, gợi ý một số noise được lọc trong cross-project setting.
+
+**3. k_best=75 gần bằng X_full (78)**: sweep plateau rộng từ k=30, đỉnh tại k=75. Không có "sweet spot" rõ ràng; curve không dốc đủ để biện hộ cho DR như một kỹ thuật lựa chọn chiều.
+
+**4. Kết luận:** Feature engineering thủ công (X_sel_global: F1=0.737, AUC=0.755) **vượt trội hơn PCA** ở mọi classifier và protocol. DR không tạo ra performance ceiling mới; nó chỉ xác nhận rằng tín hiệu trong dataset này mang tính phi tuyến và phân tán theo nhiều features riêng lẻ, điều mà các tree-based models khai thác hiệu quả hơn PCA projection.
+
+---
+
 ## Top-10 CK features (combined ranking)
 
 | # | Feature | Nhóm |
